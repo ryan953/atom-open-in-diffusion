@@ -1,0 +1,30 @@
+{
+  "context-menu": {
+    "atom-text-editor": [
+      {
+        "label": "Open In Diffusion",
+        "command": "open-in-diffusion:open-in-phabricator"
+      }
+    ]
+  },
+  "menu": [
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Phabricator",
+          "submenu": [
+            {
+              "label": "Open In Diffusion",
+              "command": "open-in-diffusion:open-in-phabricator"
+            },
+            {
+              "label": "Clear cache",
+              "command": "open-in-diffusion:clear-project-cache"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
