@@ -1,10 +1,5 @@
 'use babel';
 
-import path from 'path';
-import { CompositeDisposable } from 'atom';
-import opn from 'opn';
-import Canduit from 'canduit';
-
 const CONFIG_DEFAULT_HOST = 'https://phabricator.example.com/api/';
 const CONFIG_DEFAULT_TOKEN = 'api-XYZ';
 
@@ -41,7 +36,7 @@ export default {
   },
 
   activate(state) {
-    this.subscriptions = new CompositeDisposable();
+    this.subscriptions = new (require('atom').CompositeDisposable)();
 
     this.subscriptions.add(
       atom.config.onDidChange('open-in-diffusion.conduit-host', () => {
@@ -95,6 +90,7 @@ export default {
 
   conduitFactory() {
     return new Promise((resolve, reject) => {
+      const Canduit = require('canduit');
       new Canduit(this.conduitConfig(), (err, canduit) => {
         if (err) {
           reject(err);
@@ -138,7 +134,7 @@ export default {
   },
 
   genFindPhabProject(projectPath) {
-    const searchTerm = path.basename(projectPath);
+    const searchTerm = require('path').basename(projectPath);
 
     if (this.foundProjects[projectPath]) {
       return Promise.resolve(this.foundProjects[projectPath]);
@@ -202,7 +198,7 @@ export default {
           ? project.fields.callsign
           : project.id;
 
-        opn(`https://phabricator.pinadmin.com/diffusion/${id}/browse/master${relativeFilePath}${range}`);
+        require('opn')(`https://phabricator.pinadmin.com/diffusion/${id}/browse/master${relativeFilePath}${range}`);
       })
       .catch((message) => {
         console.warn(`Unable to open ${nuclideFilePath}. ${message}`);
