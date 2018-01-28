@@ -3,6 +3,19 @@
 const CONFIG_DEFAULT_HOST = 'https://phabricator.example.com/api/';
 const CONFIG_DEFAULT_TOKEN = 'api-XYZ';
 
+function prefix(fn, start) {
+  const ctx = this;
+  return function(message) {
+    fn.call(ctx, start + message);
+  }
+}
+
+console.debug = prefix(console.debug, '[open-in-diffusion] ');
+console.error = prefix(console.error, '[open-in-diffusion] ');
+console.info = prefix(console.info, '[open-in-diffusion] ');
+console.log = prefix(console.log, '[open-in-diffusion] ');
+console.warn = prefix(console.warn, '[open-in-diffusion] ');
+
 function rangeToString(range) {
   if (range.start.row === range.end.row) {
     return range.start.row + 1;
