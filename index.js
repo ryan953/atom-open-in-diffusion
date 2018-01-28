@@ -83,6 +83,11 @@ export default {
     this.connectToConduit();
   },
 
+  consumeSignal(registry) {
+    this.provider = registry.create();
+    this.subscriptions.add(this.provider)
+  },
+
   deactivate() {
     this.subscriptions.dispose();
   },
@@ -114,11 +119,14 @@ export default {
   },
 
   connectToConduit() {
+    const connectingMessage = 'Checking connection to Diffusion...';
+    this.provider && this.provider.add(connectingMessage);
     this.canduit = null;
     this.conduitFactory()
       .then((canduit) => {
         this.canduit = canduit;
-        console.info(`Connected to diffusion.`);
+        console.info(`Successfully connected to diffusion.`);
+        this.provider && this.provider.remove(connectingMessage);
       });
   },
 
@@ -198,6 +206,9 @@ export default {
   },
 
   openInDiffusion(nuclideFilePath, selectedRanges) {
+    const openingMessage = 'Opening in Diffusion...';
+    this.provider && this.provider.add(connectingMessage);
+
     const projectPath = this.getProjectPath(nuclideFilePath);
     const relativeFilePath = nuclideFilePath.replace(projectPath, '');
 
@@ -212,9 +223,16 @@ export default {
           : project.id;
 
         require('opn')(`https://phabricator.pinadmin.com/diffusion/${id}/browse/master${relativeFilePath}${range}`);
+        this.provider && this.provider.remove(connectingMessage);
       })
       .catch((message) => {
         console.warn(`Unable to open ${nuclideFilePath}. ${message}`);
+        this.provider && this.provider.remove(connectingMessage);
+        const errorMessage = `Unable to open ${nuclideFilePath}`;
+        this.provider && this.provider.add(errorMessage);
+        setTimeout(() => {
+          this.provider && this.provider.remove(errorMessage);
+        }, 2000);
       });
   },
 
