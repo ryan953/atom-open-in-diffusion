@@ -3,19 +3,6 @@
 const CONFIG_DEFAULT_HOST = 'https://phabricator.example.com/api/';
 const CONFIG_DEFAULT_TOKEN = 'api-XYZ';
 
-function prefix(fn, start) {
-  const ctx = this;
-  return function(message) {
-    fn.call(ctx, start + message);
-  }
-}
-
-console.debug = prefix(console.debug, '[open-in-diffusion] ');
-console.error = prefix(console.error, '[open-in-diffusion] ');
-console.info = prefix(console.info, '[open-in-diffusion] ');
-console.log = prefix(console.log, '[open-in-diffusion] ');
-console.warn = prefix(console.warn, '[open-in-diffusion] ');
-
 function rangeToString(range) {
   if (range.start.row === range.end.row) {
     return range.start.row + 1;
@@ -125,7 +112,7 @@ export default {
     this.conduitFactory()
       .then((canduit) => {
         this.canduit = canduit;
-        console.info(`Successfully connected to diffusion.`);
+        console.info(`[open-in-diffusion] Successfully connected to diffusion.`);
         this.provider && this.provider.remove(connectingMessage);
       });
   },
@@ -226,7 +213,7 @@ export default {
         this.provider && this.provider.remove(connectingMessage);
       })
       .catch((message) => {
-        console.warn(`Unable to open ${nuclideFilePath}. ${message}`);
+        console.warn(`[open-in-diffusion] Unable to open ${nuclideFilePath}. ${message}`);
         this.provider && this.provider.remove(connectingMessage);
         const errorMessage = `Unable to open ${nuclideFilePath}`;
         this.provider && this.provider.add(errorMessage);
