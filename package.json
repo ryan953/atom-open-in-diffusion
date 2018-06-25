@@ -1,7 +1,7 @@
 {
   "name": "open-in-diffusion",
   "main": "./index",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Open the current file in your diffusion web UI",
   "keywords": [],
   "repository": "https://github.com/ryan953/atom-open-in-diffusion",
