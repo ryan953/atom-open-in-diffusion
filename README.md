@@ -1,5 +1,7 @@
 # open-in-diffusion package
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/ryan953/atom-open-in-diffusion.svg)](https://greenkeeper.io/)
+
 Open the current file in the Phabricator/Diffusion web UI.
 
 Just open a file, run the "Open In Diffusion: Open In Phabricator" command, & see file in your browser!
