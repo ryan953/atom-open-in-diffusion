@@ -2,6 +2,7 @@
 
 const CONFIG_DEFAULT_HOST = 'https://phabricator.example.com/api/';
 const CONFIG_DEFAULT_TOKEN = 'api-XYZ';
+const CONNECTING_MESSAGE = 'Checking connection to Diffusion...';
 
 function rangeToString(range) {
   if (range.start.row === range.end.row) {
@@ -12,7 +13,7 @@ function rangeToString(range) {
 }
 
 function simplifyProjectName(name) {
-  return (name || '').trim().toLowerCase().replace(/[\s\-\_\(\)]/g, '');
+  return (name || '').trim().toLowerCase().replace(/[\s\-_()]/g, '');
 }
 
 export default {
@@ -35,7 +36,7 @@ export default {
     },
   },
 
-  activate(state) {
+  activate() {
     this.subscriptions = new (require('atom').CompositeDisposable)();
 
     this.subscriptions.add(
@@ -106,14 +107,13 @@ export default {
   },
 
   connectToConduit() {
-    const connectingMessage = 'Checking connection to Diffusion...';
-    this.provider && this.provider.add(connectingMessage);
+    this.provider && this.provider.add(CONNECTING_MESSAGE);
     this.canduit = null;
     this.conduitFactory()
       .then((canduit) => {
         this.canduit = canduit;
         console.info(`[open-in-diffusion] Successfully connected to diffusion.`);
-        this.provider && this.provider.remove(connectingMessage);
+        this.provider && this.provider.remove(CONNECTING_MESSAGE);
       });
   },
 
@@ -193,8 +193,7 @@ export default {
   },
 
   openInDiffusion(nuclideFilePath, selectedRanges) {
-    const openingMessage = 'Opening in Diffusion...';
-    this.provider && this.provider.add(connectingMessage);
+    this.provider && this.provider.add(CONNECTING_MESSAGE);
 
     const projectPath = this.getProjectPath(nuclideFilePath);
     const relativeFilePath = nuclideFilePath.replace(projectPath, '');
@@ -210,11 +209,11 @@ export default {
           : project.id;
 
         require('opn')(`https://phabricator.pinadmin.com/diffusion/${id}/browse/master${relativeFilePath}${range}`);
-        this.provider && this.provider.remove(connectingMessage);
+        this.provider && this.provider.remove(CONNECTING_MESSAGE);
       })
       .catch((message) => {
         console.warn(`[open-in-diffusion] Unable to open ${nuclideFilePath}. ${message}`);
-        this.provider && this.provider.remove(connectingMessage);
+        this.provider && this.provider.remove(CONNECTING_MESSAGE);
         const errorMessage = `Unable to open ${nuclideFilePath}`;
         this.provider && this.provider.add(errorMessage);
         setTimeout(() => {
