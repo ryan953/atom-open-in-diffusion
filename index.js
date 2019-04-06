@@ -28,7 +28,7 @@ function removeApiFromUrl(url) {
 let _phabHost = null;
 
 function getDiffusionHost() {
-  const host = removeApiFromUrl(atom.config.get('open-in-diffusion.conduit-host'));
+  const host = atom.config.get('open-in-diffusion.conduit-host');
   if (host !== CONFIG_DEFAULT_HOST) {
     return Promise.resolve(removeApiFromUrl(host));
   }
@@ -38,7 +38,7 @@ function getDiffusionHost() {
   }
 
   return new Promise((resolve, reject) => {
-    const arcrc = path.join(process.env.HOME, '.arcrc');
+    const arcrc = require('path').join(process.env.HOME, '.arcrc');
     require('fs').readFile(arcrc, function (err, data) {
       if (err) {
         reject(err);
@@ -106,6 +106,19 @@ export default {
           editor.getSelectedBufferRanges()
         );
       },
+      'open-in-diffusion:copy-phabricator-url': () => {
+        const editor = atom.workspace.getActiveTextEditor();
+        if (!editor) {
+          return;
+        }
+
+        this.getDiffusionUrl(
+          editor.getPath(),
+          editor.getSelectedBufferRanges()
+        ).then((url) => {
+          atom.clipboard.write(url);
+        });
+      }
     }));
 
     this.connectToConduit();
@@ -232,7 +245,7 @@ export default {
       .shift();
   },
 
-  openInDiffusion(nuclideFilePath, selectedRanges) {
+  getDiffusionUrl(nuclideFilePath, selectedRanges) {
     this.provider && this.provider.add(CONNECTING_MESSAGE);
 
     const projectPath = this.getProjectPath(nuclideFilePath);
@@ -242,15 +255,26 @@ export default {
       .map(rangeToString)
       .join(',');
 
-    Promise.all([
+    return Promise.all([
       getDiffusionHost(),
       this.genFindPhabProject(projectPath)
-    ]).then((host, project) => {
-        const id = project.fields.callsign
-          ? project.fields.callsign
-          : project.id;
+    ]).then(([host, project]) => {
+      console.log({host, project});
+      const id = project.fields.callsign
+        ? project.fields.callsign
+        : project.id;
+      console.log('id', id);
+      const url = `${host}/diffusion/${id}/browse/master${relativeFilePath}${range}`;;
+      console.log('url', url);
+      return url;
+    });
+  },
 
-        require('opn')(`${host}/diffusion/${id}/browse/master${relativeFilePath}${range}`);
+  openInDiffusion(nuclideFilePath, selectedRanges) {
+    this.getDiffusionUrl(nuclideFilePath, selectedRanges)
+      .then((url) => {
+        console.log('got a url', url);
+        require('opn')(url);
         this.provider && this.provider.remove(CONNECTING_MESSAGE);
       })
       .catch((message) => {
