@@ -16,6 +16,46 @@ function simplifyProjectName(name) {
   return (name || '').trim().toLowerCase().replace(/[\s\-_()]/g, '');
 }
 
+function requireApiUrl(url) {
+  // remove first so we don't double-add it if it's already there
+  return removeApiFromUrl(url) + '/api/';
+}
+
+function removeApiFromUrl(url) {
+  return url.replace(/\/api?\/$/, '');
+}
+
+let _phabHost = null;
+
+function getDiffusionHost() {
+  const host = removeApiFromUrl(atom.config.get('open-in-diffusion.conduit-host'));
+  if (host !== CONFIG_DEFAULT_HOST) {
+    return Promise.resolve(removeApiFromUrl(host));
+  }
+
+  if (_phabHost) {
+    return _phabHost;
+  }
+
+  return new Promise((resolve, reject) => {
+    const arcrc = path.join(process.env.HOME, '.arcrc');
+    require('fs').readFile(arcrc, function (err, data) {
+      if (err) {
+        reject(err);
+      };
+
+      try {
+        const config = JSON.parse(data);
+        _phabHost = removeApiFromUrl(Object.keys(config.hosts)[0]);
+        resolve(_phabHost);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+}
+
+
 export default {
   subscriptions: null,
   canduit: null,
@@ -85,7 +125,7 @@ export default {
   },
 
   conduitConfig() {
-    const host = atom.config.get('open-in-diffusion.conduit-host');
+    const host = requireApiUrl(atom.config.get('open-in-diffusion.conduit-host'));
     const token = atom.config.get('open-in-diffusion.conduit-token');
     if (host === CONFIG_DEFAULT_HOST || token === CONFIG_DEFAULT_TOKEN) {
       return {};
@@ -202,13 +242,15 @@ export default {
       .map(rangeToString)
       .join(',');
 
-    this.genFindPhabProject(projectPath)
-      .then((project) => {
+    Promise.all([
+      getDiffusionHost(),
+      this.genFindPhabProject(projectPath)
+    ]).then((host, project) => {
         const id = project.fields.callsign
           ? project.fields.callsign
           : project.id;
 
-        require('opn')(`https://phabricator.pinadmin.com/diffusion/${id}/browse/master${relativeFilePath}${range}`);
+        require('opn')(`${host}/diffusion/${id}/browse/master${relativeFilePath}${range}`);
         this.provider && this.provider.remove(CONNECTING_MESSAGE);
       })
       .catch((message) => {
